@@ -20,7 +20,7 @@
      (concat
       (propertize file 'face dired-directory-face)
       " "
-      (propertize kind 'face font-lock-builtin-face)
+      (propertize (or kind "") 'face font-lock-builtin-face)
       " "
       (gethash "name" result))
      'location loc)))
