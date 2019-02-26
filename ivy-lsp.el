@@ -11,13 +11,19 @@
 (defun ivy-lsp-format-result (root result)
   (let* ((fullpath (gethash "uri" (gethash "location" result)))
          (file (file-relative-name (string-remove-prefix "file://" fullpath) root))
-         (kind (alist-get (gethash "kind" result) lsp--symbol-kind)))
-    (concat
-     (propertize file 'face dired-directory-face)
-     " "
-     (propertize kind 'face font-lock-builtin-face)
-     " "
-     (gethash "name" result))))
+         (kind (alist-get (gethash "kind" result) lsp--symbol-kind))
+         (loc (let ((locs (gethash "location" result)))
+                (if (sequencep locs)
+                    locs
+                  (list locs)))))
+    (propertize
+     (concat
+      (propertize file 'face dired-directory-face)
+      " "
+      (propertize kind 'face font-lock-builtin-face)
+      " "
+      (gethash "name" result))
+     'location loc)))
 
 (defun ivy-lsp-symbols-function (workspaces root str)
   (or
@@ -42,6 +48,10 @@
               :dynamic-collection t
               :history 'ivy-lsp-symbols-history
               :caller 'ivy-lsp-symbols
-              :action (lambda (x) (print x)))))
+              :action (lambda (r)
+                        (xref--show-xrefs
+                         (lsp--locations-to-xref-items
+                          (get-text-property 0 'location r))
+                         nil)))))
 
 ;;; ivy-lsp.el ends here
